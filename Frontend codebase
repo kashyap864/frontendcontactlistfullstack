@@ -1,0 +1,101 @@
+import React, { useState, useEffect } from 'react';
+
+function ContactListApp() {
+  const [contacts, setContacts] = useState([]);
+  const [newContact, setNewContact] = useState({
+    name: '',
+    email: '',
+    phone: ''
+  });
+
+  // Fetch all contacts from the backend
+  useEffect(() => {
+    fetchContacts();
+  }, []);
+
+  const fetchContacts = async () => {
+    try {
+      const response = await fetch('/contacts');
+      const data = await response.json();
+      setContacts(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleInputChange = (event) => {
+    setNewContact({ ...newContact, [event.target.name]: event.target.value });
+  };
+
+  const addContact = async () => {
+    try {
+      const response = await fetch('/contacts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newContact)
+      });
+      const data = await response.json();
+      setContacts([...contacts, data]);
+      setNewContact({ name: '', email: '', phone: '' });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const deleteContact = async (id) => {
+    try {
+      await fetch(`/contacts/${id}`, {
+        method: 'DELETE'
+      });
+      setContacts(contacts.filter((contact) => contact._id !== id));
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  return (
+    <div>
+      <h1>Contact List</h1>
+      <div>
+        <h2>Add Contact</h2>
+        <input
+          type="text"
+          name="name"
+          placeholder="Name"
+          value={newContact.name}
+          onChange={handleInputChange}
+        />
+        <input
+          type="email"
+          name="email"
+          placeholder="Email"
+          value={newContact.email}
+          onChange={handleInputChange}
+        />
+        <input
+          type="tel"
+          name="phone"
+          placeholder="Phone"
+          value={newContact.phone}
+          onChange={handleInputChange}
+        />
+        <button onClick={addContact}>Add</button>
+      </div>
+      <div>
+        <h2>Contact List</h2>
+        {contacts.map((contact) => (
+          <div key={contact._id}>
+            <h3>{contact.name}</h3>
+            <p>Email: {contact.email}</p>
+            <p>Phone: {contact.phone}</p>
+            <button onClick={() => deleteContact(contact._id)}>Delete</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default ContactListApp;
